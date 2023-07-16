@@ -1,0 +1,21 @@
+name: Docker build
+on:
+  push:
+    tags:
+      - '*'
+permissions:
+  contents: write
+  id-token: write
+  packages: write
+jobs:
+  publish-pulumi-operator-kubernetes-job:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Build and Publish pulumi-operator-kubernetes-job Docker Image
+        uses: VaultVulp/gp-docker-action@1.1.12
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          image-name: pulumi-operator-kubernetes-job
+          dockerfile: pulumi-operator-kubernetes-job/Dockerfile
+          extract-git-tag: true
