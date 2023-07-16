@@ -1,0 +1,7 @@
+[workspace]
+members = [
+    "pulumi-operator",
+    "pulumi-operator-base",
+    "pulumi-operator-kubernetes",
+    "pulumi-operator-kubernetes-job"
+]
