@@ -8,6 +8,7 @@ springtime-di = "1.0.0"
 springtime = { version = "1.0.0", features = ["tokio", "threadsafe"] }
 async-trait = "0.1.71"
 tokio = { version = "1.29.1", features = ["full"] }
+pulumi-cli = { path = "../pulumi-cli" }
 thiserror = "1.0.43"
 serde = "1.0.171"
 schemars = "0.8.12"

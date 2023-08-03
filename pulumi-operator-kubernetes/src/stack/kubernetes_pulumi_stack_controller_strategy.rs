@@ -1,9 +1,14 @@
+use std::convert::Infallible;
 use std::pin::Pin;
 use std::sync::Arc;
 use std::time::Duration;
 
 use async_trait::async_trait;
 use futures::{Stream, StreamExt};
+use k8s_openapi::apimachinery::pkg::apis::meta::v1::ObjectMeta;
+use kube::core::admission::{
+  AdmissionRequest, AdmissionResponse, AdmissionReview,
+};
 use kube::runtime::controller::Action;
 use kube::runtime::reflector::ObjectRef;
 use kube::runtime::watcher::Config;
@@ -13,6 +18,7 @@ use springtime_di::instance_provider::ComponentInstancePtr;
 use springtime_di::{component_alias, Component};
 use thiserror::Error;
 use tokio::sync::Mutex;
+use warp::Filter;
 
 use pulumi_operator_base::stack::cached_pulumi_stack::CachedPulumiStack;
 use pulumi_operator_base::stack::pulumi_stack_controller_strategy::{
@@ -137,8 +143,49 @@ impl KubernetesPulumiStackControllerStrategy {
       Arc::new(self.clone()),
     );
 
+    // self.start_admission_controller().await?;
+
     *self.controller_stream.lock().await = Some(Box::pin(controller) as _);
     Ok(())
+  }
+
+  async fn start_admission_controller(
+    &self,
+  ) -> Result<(), PulumiStackControllerStrategyError> {
+    let routes = warp::path!("validate")
+      .and(warp::body::json())
+      .and_then(Self::validate)
+      .with(warp::reply::with::header(
+        "Content-Type",
+        "application/json",
+      ));
+
+    warp::serve(routes).run(([0, 0, 0, 0], 8080)).await;
+    Ok(())
+  }
+
+  async fn validate(
+    ar: AdmissionReview<PulumiStack>,
+  ) -> Result<impl warp::Reply, warp::Rejection> {
+    let req = ar.request.unwrap();
+
+    let Ok(admission_response) = Self::validate_request(req).await else {
+      todo!()
+    };
+
+    Ok(warp::reply::json(&admission_response.into_review()))
+  }
+
+  async fn validate_request(
+    req: AdmissionRequest<PulumiStack>,
+  ) -> Result<AdmissionResponse, PulumiStackControllerStrategyError> {
+    let mut admission_response = AdmissionResponse::from(&req);
+    if let Some(pulumi_stack) = &req.object {
+      if req.old_object.is_none() {
+        dbg!("CREATING A NEW THINGY");
+      }
+    }
+    Ok(admission_response)
   }
 }
 

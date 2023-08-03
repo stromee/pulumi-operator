@@ -133,7 +133,16 @@ impl KubernetesService {
     // TODO: Make this configurable
     self.all().await
   }
-
+  pub async fn all_in_namespace_api<K>(&self, namespace: &str) -> Api<K>
+  where
+    K: Resource<Scope = NamespaceResourceScope>
+      + Clone
+      + DeserializeOwned
+      + Debug,
+    <K as Resource>::DynamicType: Default,
+  {
+    Api::namespaced(self.client_provider.get().await, namespace)
+  }
   pub async fn all_in_namespace<K>(
     &self,
     namespace: &str,

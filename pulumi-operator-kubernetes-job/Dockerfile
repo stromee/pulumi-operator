@@ -3,6 +3,7 @@ WORKDIR /usr/src/pulumi-operator
 USER root
 ENV CARGO_HOME=/root/.cargo
 RUN apt update && apt install -y curl python3-pip
+RUN curl -fsSL https://get.pulumi.com | sh
 RUN cargo install cargo-chef
 
 FROM chef as planner
