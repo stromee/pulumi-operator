@@ -1,12 +1,15 @@
-use pulumi_cli::{PulumiCLI, UpOptions};
+pub mod pulumi_execution;
 
-#[tokio::main]
+use pulumi_cli::{PulumiCLI, UpOptions};
+use springtime::application;
+
+#[tokio::main(flavor = "current_thread")]
 async fn main() {
-  let pulumi = PulumiCLI::new("test-stack");
-  let output = pulumi
-    .up(UpOptions {
-      ..Default::default()
-    })
-    .await;
-  println!("{}", String::from_utf8_lossy(&output.stdout));
+  #[cfg(feature = "kubernetes")]
+  pulumi_operator_kubernetes::bind();
+  application::create_default()
+    .unwrap()
+    .run()
+    .await
+    .expect("could not start controller");
 }

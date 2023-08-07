@@ -1,14 +1,17 @@
-use crate::kubernetes::kubernetes_client_provider::KubernetesClientProvider;
-use k8s_openapi::api::core::v1::{Namespace, Pod};
-use k8s_openapi::apiextensions_apiserver::pkg::apis::apiextensions::v1::CustomResourceDefinition;
-use k8s_openapi::NamespaceResourceScope;
-use kube::api::{ObjectList, Patch, PatchParams, PostParams};
-use kube::{Api, Resource, ResourceExt};
-use pulumi_operator_base::Inst;
-use serde::de::DeserializeOwned;
-use springtime_di::Component;
 use std::fmt::Debug;
+
+use k8s_openapi::apiextensions_apiserver::pkg::apis::apiextensions::v1::CustomResourceDefinition;
+use k8s_openapi::{ClusterResourceScope, NamespaceResourceScope};
+use kube::api::{ListParams, ObjectList, Patch, PatchParams, PostParams};
+use kube::{Api, Resource, ResourceExt};
+use serde::de::DeserializeOwned;
+use springtime_di::instance_provider::TypedComponentInstanceProvider;
+use springtime_di::Component;
 use thiserror::Error;
+
+use pulumi_operator_base::Inst;
+
+use crate::kubernetes::kubernetes_client_provider::KubernetesClientProvider;
 
 #[derive(Component)]
 pub struct KubernetesService {
@@ -133,7 +136,12 @@ impl KubernetesService {
     // TODO: Make this configurable
     self.all().await
   }
-  pub async fn all_in_namespace_api<K>(&self, namespace: &str) -> Api<K>
+
+  pub async fn get_in_namespace<K>(
+    &self,
+    namespace: impl ToString,
+    name: impl ToString,
+  ) -> Result<K, kube::Error>
   where
     K: Resource<Scope = NamespaceResourceScope>
       + Clone
@@ -141,11 +149,44 @@ impl KubernetesService {
       + Debug,
     <K as Resource>::DynamicType: Default,
   {
-    Api::namespaced(self.client_provider.get().await, namespace)
+    Api::namespaced(
+      self.client_provider.get().await,
+      namespace.to_string().as_str(),
+    )
+    .get(name.to_string().as_str())
+    .await
+  }
+
+  pub async fn get<K>(&self, name: impl ToString) -> Result<K, kube::Error>
+  where
+    K:
+      Resource<Scope = ClusterResourceScope> + Clone + DeserializeOwned + Debug,
+    <K as Resource>::DynamicType: Default,
+  {
+    Api::all(self.client_provider.get().await)
+      .get(name.to_string().as_str())
+      .await
+  }
+
+  pub async fn all_in_namespace_api<K>(
+    &self,
+    namespace: impl ToString,
+  ) -> Api<K>
+  where
+    K: Resource<Scope = NamespaceResourceScope>
+      + Clone
+      + DeserializeOwned
+      + Debug,
+    <K as Resource>::DynamicType: Default,
+  {
+    Api::namespaced(
+      self.client_provider.get().await,
+      namespace.to_string().as_str(),
+    )
   }
   pub async fn all_in_namespace<K>(
     &self,
-    namespace: &str,
+    namespace: impl ToString,
   ) -> Result<ObjectList<K>, kube::Error>
   where
     K: Resource<Scope = NamespaceResourceScope>
@@ -154,15 +195,18 @@ impl KubernetesService {
       + Debug,
     <K as Resource>::DynamicType: Default,
   {
-    Api::namespaced(self.client_provider.get().await, namespace)
-      .list(&Default::default())
-      .await
+    Api::namespaced(
+      self.client_provider.get().await,
+      namespace.to_string().as_str(),
+    )
+    .list(&Default::default())
+    .await
   }
 
   pub async fn add_finalizer<K>(
     &self,
     resource: &K,
-    finalizer: &str,
+    finalizer: impl ToString,
   ) -> Result<(), kube::Error>
   where
     K: Resource<DynamicType = (), Scope = NamespaceResourceScope>
@@ -172,6 +216,7 @@ impl KubernetesService {
     <K as Resource>::DynamicType: Default,
   {
     let client = self.client_provider.get().await;
+    let finalizer = finalizer.to_string();
 
     let api: Api<K> = if let Some(namespace) = &resource.namespace() {
       Api::namespaced(client.clone(), namespace)
@@ -185,7 +230,7 @@ impl KubernetesService {
         }
     });
 
-    let patch_params = PatchParams::apply(finalizer);
+    let patch_params = PatchParams::apply(finalizer.to_string().as_str());
     let _ = api
       .patch(
         &resource.meta().name.clone().expect("name is empty"),
@@ -199,7 +244,7 @@ impl KubernetesService {
   pub async fn remove_finalizer<K>(
     &self,
     resource: &K,
-    finalizer: &str,
+    finalizer: impl ToString,
   ) -> Result<(), kube::Error>
   where
     K: Resource<DynamicType = (), Scope = NamespaceResourceScope>
@@ -221,7 +266,7 @@ impl KubernetesService {
         }
     });
 
-    let patch_params = PatchParams::apply(finalizer);
+    let patch_params = PatchParams::apply(finalizer.to_string().as_str());
     let _ = api
       .patch(
         &resource.meta().name.clone().expect("name is empty"),
@@ -233,13 +278,19 @@ impl KubernetesService {
     Ok(())
   }
 
-  pub async fn has_finalizer<K>(&self, resource: &K, finalizer: &str) -> bool
+  pub async fn has_finalizer<K>(
+    &self,
+    resource: &K,
+    finalizer: impl ToString,
+  ) -> bool
   where
     K: Resource<DynamicType = ()> + Clone + DeserializeOwned + Debug,
     <K as Resource>::DynamicType: Default,
   {
     if let Some(finalizers) = resource.meta().finalizers.as_ref() {
-      finalizers.iter().any(|f| f == finalizer)
+      finalizers
+        .iter()
+        .any(|f| f == finalizer.to_string().as_str())
     } else {
       false
     }

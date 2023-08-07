@@ -13,23 +13,23 @@ use std::collections::HashMap;
 #[kube(namespaced)]
 #[serde(rename_all = "camelCase")]
 pub struct StackSpec {
-  access_token_secret: String,
-  backend: String,
-  source: StackSourceRef,
-  auth: StackAuthRef,
+  pub access_token_secret: String,
+  pub backend: String,
+  pub source: StackSourceRef,
+  pub auth: StackAuthRef,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct StackAuthRef {
-  name: String,
+  pub name: String,
   #[serde(rename = "type")]
-  type_: StackAuthRefType,
+  pub type_: StackAuthRefType,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
 #[serde(rename_all = "camelCase")]
-enum StackAuthRefType {
+pub enum StackAuthRefType {
   #[serde(rename = "StackAuth")]
   Namespace,
   #[serde(rename = "ClusterStackAuth")]
@@ -39,14 +39,14 @@ enum StackAuthRefType {
 #[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub struct StackSourceRef {
-  name: String,
+  pub name: String,
   #[serde(rename = "type")]
-  type_: StackSourceRefType,
+  pub type_: StackSourceRefType,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
 #[serde(rename_all = "camelCase")]
-enum StackSourceRefType {
+pub enum StackSourceRefType {
   #[serde(rename = "StackSource")]
   Namespace,
   #[serde(rename = "ClusterStackSource")]

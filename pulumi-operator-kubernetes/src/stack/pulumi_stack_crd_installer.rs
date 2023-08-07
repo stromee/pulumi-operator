@@ -12,7 +12,9 @@ use pulumi_operator_base::Inst;
 use crate::kubernetes::kubernetes_service::{
   KubernetesCrdInstallError, KubernetesService,
 };
+use crate::stack::pulumi_stack_cluster_source_crd::ClusterStackSource as ClusterStackSourceCrd;
 use crate::stack::pulumi_stack_crd::PulumiStack as PulumiStackCrd;
+use crate::stack::pulumi_stack_source_crd::StackSource as StackSourceCrd;
 
 #[derive(Component)]
 pub struct PulumiStackCrdInstaller {
@@ -24,6 +26,16 @@ impl PulumiStackCrdInstaller {
     self
       .kubernetes_service
       .install_crd(PulumiStackCrd::crd())
+      .await?;
+
+    self
+      .kubernetes_service
+      .install_crd(ClusterStackSourceCrd::crd())
+      .await?;
+
+    self
+      .kubernetes_service
+      .install_crd(StackSourceCrd::crd())
       .await?;
 
     Ok(())

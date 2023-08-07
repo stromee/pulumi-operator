@@ -30,6 +30,7 @@ impl PulumiStackService for KubernetesPulumiStackService {
     let namespace = parts.next().unwrap();
     let name = parts.next().unwrap();
 
+    dbg!("Update stack123");
     let job = serde_json::from_value(json!({
         "apiVersion": "batch/v1",
         "kind": "Job",
@@ -44,7 +45,7 @@ impl PulumiStackService for KubernetesPulumiStackService {
                 "spec": {
                     "containers": [{
                         "name": "pulumi",
-                        "image": "pulumi-operator-kubernetes-job:latest"
+                        "image": "ghcr.io/stromee/pulumi-operator/pulumi-operator-kubernetes-job:1.0.1"
                     }],
                     "imagePullPolicy": "Always",
                     "restartPolicy": "Never"
