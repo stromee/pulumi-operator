@@ -1,4 +1,4 @@
-use crate::stack::cached_pulumi_stack::CachedPulumiStack;
+use crate::stack::cached_stack::CachedPulumiStack;
 
 pub enum PulumiStackChange {
   Added {

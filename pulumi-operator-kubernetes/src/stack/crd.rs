@@ -1,7 +1,6 @@
 use k8s_openapi::schemars::JsonSchema;
 use kube::CustomResource;
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 #[derive(CustomResource, Serialize, Deserialize, Clone, Debug, JsonSchema)]
 #[kube(

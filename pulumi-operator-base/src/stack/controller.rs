@@ -5,7 +5,7 @@ use springtime_di::future::{BoxFuture, FutureExt};
 use springtime_di::instance_provider::{ComponentInstancePtr, ErrorPtr};
 use springtime_di::{component_alias, Component};
 
-use crate::stack::pulumi_stack_controller_strategy::{
+use crate::stack::controller_strategy::{
   PulumiStackControllerStrategy, PulumiStackControllerStrategyError,
 };
 use crate::Inst;

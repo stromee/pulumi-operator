@@ -1,7 +1,8 @@
-use crate::stack::pulumi_stack_inner_auth::InnerStackAuthSpec;
 use kube::CustomResource;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+
+use super::inner::InnerStackAuthSpec;
 
 #[derive(CustomResource, Serialize, Deserialize, Clone, Debug, JsonSchema)]
 #[kube(

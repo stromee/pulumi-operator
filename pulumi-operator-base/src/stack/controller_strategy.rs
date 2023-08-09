@@ -1,4 +1,4 @@
-use crate::stack::pulumi_stack_service::PulumiStackServiceError;
+use crate::stack::service::PulumiStackServiceError;
 use async_trait::async_trait;
 use springtime_di::injectable;
 use thiserror::Error;

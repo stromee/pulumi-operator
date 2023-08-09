@@ -9,14 +9,15 @@ use springtime_di::{component_alias, Component};
 
 use pulumi_operator_base::Inst;
 
-use crate::kubernetes::kubernetes_service::{
+use crate::kubernetes::service::{
   KubernetesCrdInstallError, KubernetesService,
 };
-use crate::stack::pulumi_stack_auth_crd::StackAuth as StackAuthCrd;
-use crate::stack::pulumi_stack_cluster_auth::ClusterStackAuth as ClusterStackAuthCrd;
-use crate::stack::pulumi_stack_cluster_source_crd::ClusterStackSource as ClusterStackSourceCrd;
-use crate::stack::pulumi_stack_crd::PulumiStack as PulumiStackCrd;
-use crate::stack::pulumi_stack_source_crd::StackSource as StackSourceCrd;
+use crate::stack::auth::cluster_crd::ClusterStackAuth as ClusterStackAuthCrd;
+use crate::stack::auth::crd::StackAuth as StackAuthCrd;
+use crate::stack::source::cluster_crd::ClusterStackSource as ClusterStackSourceCrd;
+use crate::stack::source::crd::StackSource as StackSourceCrd;
+use crate::stack::stack::crd::PulumiStack as PulumiStackCrd;
+
 #[derive(Component)]
 pub struct PulumiStackCrdInstaller {
   kubernetes_service: Inst<KubernetesService>,

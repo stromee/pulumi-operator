@@ -1,2 +1,5 @@
-pub mod kubernetes_client_provider;
-pub mod kubernetes_service;
+pub mod client_provider;
+pub mod service;
+#[cfg(feature = "install-crds")]
+pub mod crd_installer;
+

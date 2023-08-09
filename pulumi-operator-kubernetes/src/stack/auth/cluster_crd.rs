@@ -1,17 +1,18 @@
-use crate::stack::pulumi_stack_inner_source::InnerStackSourceSpec;
 use kube::CustomResource;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+
+use super::inner::InnerStackAuthSpec;
 
 #[derive(CustomResource, Serialize, Deserialize, Clone, Debug, JsonSchema)]
 #[kube(
   group = "pulumi.stromee.de",
   version = "v1",
-  kind = "ClusterStackSource",
-  plural = "clusterstacksources"
+  kind = "ClusterStackAuth",
+  plural = "clusterstackauths"
 )]
 #[serde(rename_all = "camelCase")]
-pub struct ClusterStackSourceSpec {
+pub struct ClusterStackAuthSpec {
   #[serde(flatten)]
-  pub inner: InnerStackSourceSpec,
+  pub inner: InnerStackAuthSpec,
 }

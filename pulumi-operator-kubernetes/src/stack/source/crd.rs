@@ -1,7 +1,8 @@
-use crate::stack::pulumi_stack_inner_source::InnerStackSourceSpec;
 use kube::CustomResource;
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
+
+use super::inner::InnerStackSourceSpec;
 
 #[derive(CustomResource, Serialize, Deserialize, Clone, Debug, JsonSchema)]
 #[kube(

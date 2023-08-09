@@ -27,8 +27,10 @@ use pulumi_operator_base::stack::pulumi_stack_controller_strategy::{
 use pulumi_operator_base::stack::pulumi_stack_service::PulumiStackService;
 use pulumi_operator_base::Inst;
 
-use crate::kubernetes::kubernetes_service::KubernetesService;
-use crate::stack::pulumi_stack_crd::PulumiStack;
+use crate::kubernetes::service::KubernetesService;
+
+use super::stack::crd::PulumiStack;
+
 
 const FINALIZER: &str = "pulumi.stromee.de";
 

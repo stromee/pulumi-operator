@@ -1,4 +1,3 @@
-use crate::kubernetes::kubernetes_service::KubernetesService;
 use async_trait::async_trait;
 use futures::{StreamExt, TryStreamExt};
 use k8s_openapi::api::batch::v1::Job;
@@ -12,6 +11,8 @@ use serde_json::json;
 use springtime_di::{component_alias, Component};
 use std::time::Duration;
 use tokio::time::timeout;
+
+use crate::kubernetes::service::KubernetesService;
 
 #[derive(Component)]
 pub struct KubernetesPulumiStackService {
