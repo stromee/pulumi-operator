@@ -20,11 +20,11 @@ use thiserror::Error;
 use tokio::sync::Mutex;
 use warp::Filter;
 
-use pulumi_operator_base::stack::cached_pulumi_stack::CachedPulumiStack;
-use pulumi_operator_base::stack::pulumi_stack_controller_strategy::{
+use pulumi_operator_base::stack::cached_stack::CachedPulumiStack;
+use pulumi_operator_base::stack::controller_strategy::{
   PulumiStackControllerStrategy, PulumiStackControllerStrategyError,
 };
-use pulumi_operator_base::stack::pulumi_stack_service::PulumiStackService;
+use pulumi_operator_base::stack::service::PulumiStackService;
 use pulumi_operator_base::Inst;
 
 use crate::kubernetes::service::KubernetesService;
