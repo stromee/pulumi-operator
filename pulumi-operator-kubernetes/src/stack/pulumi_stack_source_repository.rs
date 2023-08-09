@@ -24,7 +24,7 @@ impl StackSourceRepository {
       .await
   }
 
-  pub async fn get_by_name_and_namespace(
+  pub async fn get_by_name(
     &self,
     name: impl ToString,
   ) -> Result<ClusterStackSource, kube::Error> {

@@ -13,8 +13,7 @@ use std::collections::HashMap;
 #[kube(namespaced)]
 #[serde(rename_all = "camelCase")]
 pub struct StackSpec {
-  pub access_token_secret: String,
-  pub backend: String,
+  pub stack_name: Option<String>,
   pub source: StackSourceRef,
   pub auth: StackAuthRef,
 }

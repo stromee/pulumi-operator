@@ -45,7 +45,14 @@ impl PulumiStackService for KubernetesPulumiStackService {
                 "spec": {
                     "containers": [{
                         "name": "pulumi",
-                        "image": "ghcr.io/stromee/pulumi-operator/pulumi-operator-kubernetes-job:1.0.1"
+                        "image": "ghcr.io/stromee/pulumi-operator/pulumi-operator-kubernetes-job:1.0.2",
+                        "env": [{
+                            "name": "PULUMI_STACK",
+                            "value": name
+                        }, {
+                            "name": "WATCH_NAMESPACE",
+                            "value": namespace
+                        }]
                     }],
                     "imagePullPolicy": "Always",
                     "restartPolicy": "Never"
