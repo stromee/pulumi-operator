@@ -1,15 +1,17 @@
 use pulumi_operator_base::Inst;
-use pulumi_operator_kubernetes::kubernetes::kubernetes_service::KubernetesService;
-use pulumi_operator_kubernetes::stack::pulumi_stack_auth_repository::StackAuthRepository;
-use pulumi_operator_kubernetes::stack::pulumi_stack_crd::{
+use pulumi_operator_kubernetes::kubernetes::service::KubernetesService;
+use pulumi_operator_kubernetes::stack::auth::inner::InnerStackAuthSpec;
+use pulumi_operator_kubernetes::stack::auth::repository::StackAuthRepository;
+use pulumi_operator_kubernetes::stack::crd::{
   PulumiStack, StackAuthRefType, StackSourceRefType,
 };
-use pulumi_operator_kubernetes::stack::pulumi_stack_inner_auth::InnerStackAuthSpec;
-use pulumi_operator_kubernetes::stack::pulumi_stack_inner_source::InnerStackSourceSpec;
-use pulumi_operator_kubernetes::stack::pulumi_stack_source_repository::StackSourceRepository;
+use pulumi_operator_kubernetes::stack::source::git::inner::InnerGitStackSourceSpec;
+use pulumi_operator_kubernetes::stack::source::git::repository::GitStackSourceRepository;
+use pulumi_operator_kubernetes::stack::source::oci::repository::OciStackSourceRepository;
+use pulumi_operator_kubernetes::stack::source::Source;
 use springtime::runner::ApplicationRunner;
 use springtime_di::future::{BoxFuture, FutureExt};
-use springtime_di::instance_provider::{ComponentInstancePtr, ErrorPtr};
+use springtime_di::instance_provider::ErrorPtr;
 use springtime_di::{component_alias, Component};
 use std::env::VarError;
 use std::sync::Arc;
@@ -18,7 +20,8 @@ use thiserror::Error;
 #[derive(Component)]
 pub struct PulumiExecution {
   kubernetes_service: Inst<KubernetesService>,
-  stack_source_repository: Inst<StackSourceRepository>,
+  git_stack_source_repository: Inst<GitStackSourceRepository>,
+  oci_stack_source_repository: Inst<OciStackSourceRepository>,
   stack_auth_repository: Inst<StackAuthRepository>,
 }
 
@@ -88,27 +91,39 @@ impl PulumiExecution {
   pub async fn get_inner_stack_source(
     &self,
     pulumi_stack: &PulumiStack,
-  ) -> Result<InnerStackSourceSpec, PulumiExecutionError> {
+  ) -> Result<Source, PulumiExecutionError> {
     let source_ref = &pulumi_stack.spec.source;
     let name = pulumi_stack.metadata.name.clone().unwrap();
     let namespace = pulumi_stack.metadata.namespace.clone().unwrap();
     Ok(match source_ref.type_ {
-      StackSourceRefType::Namespace => {
-        self
-          .stack_source_repository
-          .get_namespaced_by_name_and_namespace(&name, &namespace)
-          .await?
-          .spec
-          .inner
-      }
-      StackSourceRefType::Cluster => {
-        self
-          .stack_source_repository
-          .get_by_name(&name)
-          .await?
-          .spec
-          .inner
-      }
+      StackSourceRefType::Git => self
+        .git_stack_source_repository
+        .get_namespaced_by_name_and_namespace(&name, &namespace)
+        .await?
+        .spec
+        .inner
+        .into(),
+      StackSourceRefType::ClusterGit => self
+        .git_stack_source_repository
+        .get_by_name(&name)
+        .await?
+        .spec
+        .inner
+        .into(),
+      StackSourceRefType::Oci => self
+        .oci_stack_source_repository
+        .get_namespaced_by_name_and_namespace(&name, &namespace)
+        .await?
+        .spec
+        .inner
+        .into(),
+      StackSourceRefType::ClusterOci => self
+        .oci_stack_source_repository
+        .get_by_name(&name)
+        .await?
+        .spec
+        .inner
+        .into(),
     })
   }
 }

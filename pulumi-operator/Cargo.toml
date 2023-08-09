@@ -10,7 +10,7 @@ springtime = { version = "1.0.0", features = ["tokio", "threadsafe"] }
 springtime-di = "1.0.0"
 pulumi-operator-base = { path = "../pulumi-operator-base" }
 pulumi-operator-kubernetes = { path = "../pulumi-operator-kubernetes", optional = true, features = ["install-crds"] }
-k8s-openapi = { version = "0.18.0", features = ["v1_26"] }
+k8s-openapi = { version = "0.19.0", features = ["v1_26"] }
 tokio = { version = "1.29.1", features = ["full"] }
 thiserror = "1.0.43"
 

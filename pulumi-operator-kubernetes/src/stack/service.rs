@@ -2,8 +2,8 @@ use async_trait::async_trait;
 use futures::{StreamExt, TryStreamExt};
 use k8s_openapi::api::batch::v1::Job;
 use kube::api::{DeleteParams, PostParams, WatchEvent};
-use pulumi_operator_base::stack::cached_pulumi_stack::CachedPulumiStack;
-use pulumi_operator_base::stack::pulumi_stack_service::{
+use pulumi_operator_base::stack::cached_stack::CachedPulumiStack;
+use pulumi_operator_base::stack::service::{
   PulumiStackService, PulumiStackServiceError,
 };
 use pulumi_operator_base::Inst;

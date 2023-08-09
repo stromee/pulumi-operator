@@ -14,9 +14,11 @@ use crate::kubernetes::service::{
 };
 use crate::stack::auth::cluster_crd::ClusterStackAuth as ClusterStackAuthCrd;
 use crate::stack::auth::crd::StackAuth as StackAuthCrd;
-use crate::stack::source::cluster_crd::ClusterStackSource as ClusterStackSourceCrd;
-use crate::stack::source::crd::StackSource as StackSourceCrd;
-use crate::stack::stack::crd::PulumiStack as PulumiStackCrd;
+use crate::stack::crd::PulumiStack as PulumiStackCrd;
+use crate::stack::source::git::cluster_crd::ClusterGitStackSource as ClusterGitStackSourceCrd;
+use crate::stack::source::git::crd::GitStackSource as GitStackSourceCrd;
+use crate::stack::source::oci::cluster_crd::ClusterOciStackSource as ClusterOciStackSourceCrd;
+use crate::stack::source::oci::crd::OciStackSource as OciStackSourceCrd;
 
 #[derive(Component)]
 pub struct PulumiStackCrdInstaller {
@@ -32,12 +34,22 @@ impl PulumiStackCrdInstaller {
 
     self
       .kubernetes_service
-      .install_crd(ClusterStackSourceCrd::crd())
+      .install_crd(ClusterGitStackSourceCrd::crd())
       .await?;
 
     self
       .kubernetes_service
-      .install_crd(StackSourceCrd::crd())
+      .install_crd(GitStackSourceCrd::crd())
+      .await?;
+
+    self
+      .kubernetes_service
+      .install_crd(ClusterOciStackSourceCrd::crd())
+      .await?;
+
+    self
+      .kubernetes_service
+      .install_crd(OciStackSourceCrd::crd())
       .await?;
 
     self

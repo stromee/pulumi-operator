@@ -18,5 +18,5 @@ futures = "0.3.28"
 tracing = "0.1.37"
 pulumi-operator-kubernetes = { path = "../pulumi-operator-kubernetes" }
 pulumi-operator-base = { path = "../pulumi-operator-base" }
-k8s-openapi = { version = "0.18.0", features = ["v1_26"] }
-kube = { version = "0.83.0", features = ["runtime", "derive", "admission"] }
+k8s-openapi = { version = "0.19.0", features = ["v1_26"] }
+kube = { version = "0.85.0", features = ["runtime", "derive", "admission"] }

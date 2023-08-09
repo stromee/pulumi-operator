@@ -1,19 +1,18 @@
 use kube::CustomResource;
 use schemars::JsonSchema;
-use serde::{Deserialize, Serialize};
+use serde::{Serialize, Deserialize};
 
-use super::inner::InnerStackSourceSpec;
+use super::inner::InnerOciStackSourceSpec;
 
 #[derive(CustomResource, Serialize, Deserialize, Clone, Debug, JsonSchema)]
 #[kube(
   group = "pulumi.stromee.de",
   version = "v1",
-  kind = "StackSource",
-  plural = "stacksources"
+  kind = "ClusterOciStackSource",
+  plural = "clusterocistacksources"
 )]
-#[kube(namespaced)]
 #[serde(rename_all = "camelCase")]
-pub struct StackSourceSpec {
+pub struct ClusterOciStackSourceSpec {
   #[serde(flatten)]
-  pub inner: InnerStackSourceSpec,
+  pub inner: InnerOciStackSourceSpec,
 }

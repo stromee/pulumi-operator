@@ -2,12 +2,15 @@ use k8s_openapi::schemars::JsonSchema;
 use kube::CustomResource;
 use serde::{Deserialize, Serialize};
 
+use super::status::StackStatus;
+
 #[derive(CustomResource, Serialize, Deserialize, Clone, Debug, JsonSchema)]
 #[kube(
   group = "pulumi.stromee.de",
   version = "v1",
   kind = "PulumiStack",
-  plural = "pulumistacks"
+  plural = "pulumistacks",
+  status = "StackStatus",
 )]
 #[kube(namespaced)]
 #[serde(rename_all = "camelCase")]
@@ -45,8 +48,13 @@ pub struct StackSourceRef {
 #[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
 #[serde(rename_all = "camelCase")]
 pub enum StackSourceRefType {
-  #[serde(rename = "StackSource")]
-  Namespace,
-  #[serde(rename = "ClusterStackSource")]
-  Cluster,
+  #[serde(rename = "GitStackSource")]
+  Git,
+  #[serde(rename = "ClusterGitStackSource")]
+  ClusterGit,
+  #[serde(rename = "OciStackSource")]
+  Oci,
+  #[serde(rename = "ClusterOciStackSource")]
+  ClusterOci,
 }
+

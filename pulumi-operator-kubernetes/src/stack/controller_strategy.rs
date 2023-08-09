@@ -1,11 +1,9 @@
-use std::convert::Infallible;
 use std::pin::Pin;
 use std::sync::Arc;
 use std::time::Duration;
 
 use async_trait::async_trait;
 use futures::{Stream, StreamExt};
-use k8s_openapi::apimachinery::pkg::apis::meta::v1::ObjectMeta;
 use kube::core::admission::{
   AdmissionRequest, AdmissionResponse, AdmissionReview,
 };
@@ -14,7 +12,6 @@ use kube::runtime::reflector::ObjectRef;
 use kube::runtime::watcher::Config;
 use kube::runtime::{watcher, Controller};
 use kube::Resource;
-use springtime_di::instance_provider::ComponentInstancePtr;
 use springtime_di::{component_alias, Component};
 use thiserror::Error;
 use tokio::sync::Mutex;
@@ -29,8 +26,7 @@ use pulumi_operator_base::Inst;
 
 use crate::kubernetes::service::KubernetesService;
 
-use super::stack::crd::PulumiStack;
-
+use super::crd::PulumiStack;
 
 const FINALIZER: &str = "pulumi.stromee.de";
 
