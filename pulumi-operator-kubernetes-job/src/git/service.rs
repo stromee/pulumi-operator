@@ -1,6 +1,6 @@
-use std::{collections::BTreeMap, path::PathBuf};
+use std::{collections::BTreeMap, path::{PathBuf, Path}};
 
-use git2::{Cred, RemoteCallbacks};
+use git2::{Cred, RemoteCallbacks, FetchOptions, build::RepoBuilder};
 use k8s_openapi::{api::core::v1::Secret, ByteString};
 use kube::core::ObjectMeta;
 use pulumi_operator_base::Inst;
@@ -80,6 +80,14 @@ impl GitService {
             let data = git_controller.get_secret(&namespace, &auth).await?;
             git_controller.build_callback(auth, &data, &mut callback)?;
           }
+
+          let mut fo = FetchOptions::new();
+          fo.remote_callbacks(callback);
+
+          let mut builder = RepoBuilder::new();
+          builder.fetch_options(fo);
+          
+          builder.clone("", Path::new(""));
 
           Ok::<&str, GitError>("/")
         }.await;
