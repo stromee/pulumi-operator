@@ -1,6 +1,8 @@
+pub mod fetch_service;
+pub mod git;
+pub mod oci;
 pub mod pulumi_execution;
 
-use pulumi_cli::{PulumiCLI, UpOptions};
 use springtime::application;
 
 #[tokio::main(flavor = "current_thread")]

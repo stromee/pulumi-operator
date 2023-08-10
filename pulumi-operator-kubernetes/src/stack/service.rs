@@ -12,11 +12,13 @@ use springtime_di::{component_alias, Component};
 use std::time::Duration;
 use tokio::time::timeout;
 
+use crate::config_provider::ConfigProvider;
 use crate::kubernetes::service::KubernetesService;
 
 #[derive(Component)]
 pub struct KubernetesPulumiStackService {
   kubernetes_service: Inst<KubernetesService>,
+  config_provider: Inst<ConfigProvider>,
 }
 
 #[component_alias]
@@ -30,6 +32,11 @@ impl PulumiStackService for KubernetesPulumiStackService {
     let mut parts = stack.name.splitn(2, '/');
     let namespace = parts.next().unwrap();
     let name = parts.next().unwrap();
+
+    let operator_namespace = self
+      .config_provider
+      .operator_namespace()
+      .map_err(|e| PulumiStackServiceError::Config(Box::new(e)))?; // TODO
 
     dbg!("Update stack123");
     let job = serde_json::from_value(json!({
@@ -53,6 +60,9 @@ impl PulumiStackService for KubernetesPulumiStackService {
                         }, {
                             "name": "WATCH_NAMESPACE",
                             "value": namespace
+                        }, {
+                            "name": ConfigProvider::OPERATOR_NS_VAR,
+                            "value": operator_namespace
                         }]
                     }],
                     "imagePullPolicy": "Always",

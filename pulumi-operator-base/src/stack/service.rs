@@ -1,3 +1,5 @@
+use std::error::Error;
+
 use crate::stack::cached_stack::CachedPulumiStack;
 use async_trait::async_trait;
 use springtime_di::injectable;
@@ -7,6 +9,9 @@ use thiserror::Error;
 pub enum PulumiStackServiceError {
   #[error("pulumi task cancellation failed")]
   CancelFailed,
+
+  #[error("Configuration error: {0}")]
+  Config(Box<dyn Error + Sync + Send>),
 }
 
 #[injectable]

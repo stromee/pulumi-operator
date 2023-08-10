@@ -5,7 +5,6 @@ use pulumi_operator_kubernetes::stack::auth::repository::StackAuthRepository;
 use pulumi_operator_kubernetes::stack::crd::{
   PulumiStack, StackAuthRefType, StackSourceRefType,
 };
-use pulumi_operator_kubernetes::stack::source::git::inner::InnerGitStackSourceSpec;
 use pulumi_operator_kubernetes::stack::source::git::repository::GitStackSourceRepository;
 use pulumi_operator_kubernetes::stack::source::oci::repository::OciStackSourceRepository;
 use pulumi_operator_kubernetes::stack::source::Source;
@@ -17,12 +16,15 @@ use std::env::VarError;
 use std::sync::Arc;
 use thiserror::Error;
 
+use crate::fetch_service::{FetchError, FetchService};
+
 #[derive(Component)]
 pub struct PulumiExecution {
   kubernetes_service: Inst<KubernetesService>,
   git_stack_source_repository: Inst<GitStackSourceRepository>,
   oci_stack_source_repository: Inst<OciStackSourceRepository>,
   stack_auth_repository: Inst<StackAuthRepository>,
+  fetch_servcice: Inst<FetchService>,
 }
 
 #[derive(Debug, Error)]
@@ -33,6 +35,8 @@ pub enum PulumiExecutionError {
   CurrentNamespaceNotDefined(VarError),
   #[error("Pulumi Stack definition could not be fetched")]
   PulumiStackNotFound(#[from] kube::Error),
+  #[error("Failed to fetch stack source: {0}")]
+  StackSourceFetchFailed(#[from] FetchError),
 }
 
 impl PulumiExecution {
@@ -40,6 +44,12 @@ impl PulumiExecution {
     let pulumi_stack = self.get_stack().await?;
     let inner_stack_source = self.get_inner_stack_source(&pulumi_stack).await?;
     let inner_stack_auth = self.get_inner_stack_auth(&pulumi_stack).await?;
+
+    let working_dir = self
+      .fetch_servcice
+      .fetch(&inner_stack_source, &pulumi_stack.metadata)
+      .await?;
+
     dbg!("Found inner stack {}", inner_stack_source);
 
     Ok(())
