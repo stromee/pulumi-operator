@@ -26,6 +26,7 @@ impl PulumiStackController {
   }
 }
 
+#[cfg(feature = "boot")]
 #[component_alias]
 impl ApplicationRunner for PulumiStackController {
   fn run(&self) -> BoxFuture<'_, Result<(), ErrorPtr>> {
