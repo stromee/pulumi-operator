@@ -12,6 +12,9 @@ pub enum PulumiStackServiceError {
 
   #[error("Configuration error: {0}")]
   Config(Box<dyn Error + Sync + Send>),
+
+  #[error("pulumi stack update failed: {0}")]
+  UpdateFailed(Box<dyn Error + Sync + Send>),
 }
 
 #[injectable]

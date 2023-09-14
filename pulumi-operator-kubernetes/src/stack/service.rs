@@ -38,12 +38,12 @@ impl PulumiStackService for KubernetesPulumiStackService {
       .operator_namespace()
       .map_err(|e| PulumiStackServiceError::Config(Box::new(e)))?; // TODO
 
-    dbg!("Update stack123");
     let job = serde_json::from_value(json!({
         "apiVersion": "batch/v1",
         "kind": "Job",
         "metadata": {
-            "name": name
+            "name": name,
+            "namespace": "pulumi-operator"
         },
         "spec": {
             "template": {
@@ -53,7 +53,7 @@ impl PulumiStackService for KubernetesPulumiStackService {
                 "spec": {
                     "containers": [{
                         "name": "pulumi",
-                        "image": "ghcr.io/stromee/pulumi-operator/pulumi-operator-kubernetes-job:1.0.2",
+                        "image": "ghcr.io/stromee/pulumi-operator/pulumi-operator-kubernetes-job:1.0.4",
                         "env": [{
                             "name": "PULUMI_STACK",
                             "value": name
@@ -65,23 +65,27 @@ impl PulumiStackService for KubernetesPulumiStackService {
                             "value": operator_namespace
                         }]
                     }],
+                    "serviceAccountName": "superuser",
                     "imagePullPolicy": "Always",
                     "restartPolicy": "Never"
                 }
             },
-            "backoffLimit": 5
+            "backoffLimit": 100
         }
     }))
-    .expect("todo");
+    .map_err(|err| PulumiStackServiceError::UpdateFailed(err.into()))?;
 
     let api = self
       .kubernetes_service
-      .all_in_namespace_api::<Job>(namespace)
+      .all_in_namespace_api::<Job>("pulumi-operator")
       .await;
+
     api
       .create(&PostParams::default(), &job)
       .await
-      .expect("todo");
+      .map_err(|err| PulumiStackServiceError::UpdateFailed(err.into()))?;
+    dbg!("Update stack123");
+
     Ok(())
   }
 
@@ -94,7 +98,7 @@ impl PulumiStackService for KubernetesPulumiStackService {
     let name = parts.next().unwrap();
     let api = self
       .kubernetes_service
-      .all_in_namespace_api::<Job>(namespace)
+      .all_in_namespace_api::<Job>("pulumi-operator")
       .await;
 
     if api.get(name).await.is_err() {

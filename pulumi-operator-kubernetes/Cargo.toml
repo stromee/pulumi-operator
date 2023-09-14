@@ -22,3 +22,5 @@ warp = "0.3.5"
 
 [features]
 install-crds = []
+boot = []
+default = ["boot"]

@@ -144,6 +144,7 @@ impl KubernetesPulumiStackControllerStrategy {
     // self.start_admission_controller().await?;
 
     *self.controller_stream.lock().await = Some(Box::pin(controller) as _);
+    println!("sososo");
     Ok(())
   }
 
@@ -191,6 +192,7 @@ impl KubernetesPulumiStackControllerStrategy {
 #[async_trait]
 impl PulumiStackControllerStrategy for KubernetesPulumiStackControllerStrategy {
   async fn initialize(&self) -> Result<(), PulumiStackControllerStrategyError> {
+    #[cfg(feature = "boot")]
     self.start_controller().await?;
     Ok(())
   }
