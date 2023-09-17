@@ -123,6 +123,8 @@ impl PulumiExecution {
       })
       .await;
 
+    pulumi.cancel().await;
+
     let exit = pulumi
       .up(UpOptions {
         stack: pulumi_stack.spec.stack_name.clone(),

@@ -23,6 +23,12 @@ impl PulumiCLI {
     self.spawn(command).await
   }
 
+  pub async fn cancel(&self) -> ExitStatus {
+    let mut command = Command::new("pulumi");
+    command.arg("cancel");
+    self.spawn(command).await
+  }
+
   pub async fn up(&self, options: UpOptions) -> ExitStatus {
     let mut command = Command::new("pulumi");
     command.arg("up");
