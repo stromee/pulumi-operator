@@ -1,6 +1,6 @@
 use futures::task::Spawn;
 use k8s_openapi::api::core::v1::Secret;
-use pulumi_cli::{LoginOptions, PulumiCLI, UpOptions};
+use pulumi_cli::{CancelOptions, LoginOptions, PulumiCLI, UpOptions};
 use pulumi_operator_base::Inst;
 use pulumi_operator_kubernetes::kubernetes::service::KubernetesService;
 use pulumi_operator_kubernetes::stack::auth::inner::InnerStackAuthSpec;
@@ -123,7 +123,11 @@ impl PulumiExecution {
       })
       .await;
 
-    pulumi.cancel().await;
+    pulumi
+      .cancel(CancelOptions {
+        stack: pulumi_stack.spec.stack_name.clone(),
+      })
+      .await;
 
     let exit = pulumi
       .up(UpOptions {
