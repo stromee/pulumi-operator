@@ -23,9 +23,12 @@ impl PulumiCLI {
     self.spawn(command).await
   }
 
-  pub async fn cancel(&self) -> ExitStatus {
+  pub async fn cancel(&self, options: CancelOptions) -> ExitStatus {
     let mut command = Command::new("pulumi");
     command.arg("cancel");
+    if let Some(stack) = options.stack {
+      command.arg(stack);
+    }
     self.spawn(command).await
   }
 
@@ -155,6 +158,10 @@ pub struct UpOptions {
   pub show_reads: bool,
   pub show_replacement_steps: bool,
   pub show_sames: bool,
+}
+
+pub struct CancelOptions {
+  pub stack: Option<String>,
 }
 
 pub struct DestroyOptions {
