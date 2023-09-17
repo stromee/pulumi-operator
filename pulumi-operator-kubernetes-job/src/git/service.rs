@@ -172,7 +172,7 @@ impl GitController {
         if let Some(Ok(remote_hash)) = remote_hash {
           callback.certificate_check(move |cert, hostname| {
             if let Some(hostkey) = cert.as_hostkey() {
-              dbg!(&remote_hash, encode(hostkey.hash_sha256().unwrap());
+              dbg!(&remote_hash, encode(hostkey.hash_sha256().unwrap()));
               if remote_hash == encode(hostkey.hash_sha256().unwrap()) {
                 return Ok(CertificateCheckStatus::CertificateOk);
               }
