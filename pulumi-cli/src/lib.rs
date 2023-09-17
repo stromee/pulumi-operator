@@ -17,14 +17,14 @@ impl PulumiCLI {
   }
 
   pub async fn login(&self, options: LoginOptions) -> ExitStatus {
-    let mut command = Command::new("pulumi");
+    let mut command = Command::new("/root/.pulumi/bin/pulumi");
     command.arg("login").arg(options.url);
 
     self.spawn(command).await
   }
 
   pub async fn up(&self, options: UpOptions) -> ExitStatus {
-    let mut command = Command::new("pulumi");
+    let mut command = Command::new("/root/.pulumi/bin/pulumi");
     command.arg("up");
 
     if let Some(config) = &options.config {
@@ -112,7 +112,7 @@ impl PulumiCLI {
   }
 
   pub async fn destroy(&self, options: DestroyOptions) -> ExitStatus {
-    let mut command = Command::new("pulumi");
+    let mut command = Command::new("/root/.pulumi/bin/pulumi");
     command.arg("destroy");
 
     if let Some(stack) = &options.stack {
