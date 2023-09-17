@@ -66,10 +66,10 @@ impl PulumiStackService for KubernetesPulumiStackService {
                         }, {
                             "name": "RUST_BACKTRACE",
                             "value": "full"
-                        }]
+                        }],
+                        "imagePullPolicy": "Always"
                     }],
                     "serviceAccountName": "superuser",
-                    "imagePullPolicy": "Always",
                     "restartPolicy": "Never"
                 }
             },
