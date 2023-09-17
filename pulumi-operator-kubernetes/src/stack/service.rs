@@ -63,6 +63,9 @@ impl PulumiStackService for KubernetesPulumiStackService {
                         }, {
                             "name": ConfigProvider::OPERATOR_NS_VAR,
                             "value": operator_namespace
+                        }, {
+                            "name": "RUST_BACKTRACE",
+                            "value": "full"
                         }]
                     }],
                     "serviceAccountName": "superuser",

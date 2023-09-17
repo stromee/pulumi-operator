@@ -154,6 +154,8 @@ impl GitController {
             .0,
         )?;
 
+        dbg!(privatekey);
+
         let passphrase = match data.get("identity.pass") {
           Some(passphrase) => Some(String::from_utf8(passphrase.clone().0)?),
           None => None,
