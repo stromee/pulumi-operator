@@ -7,8 +7,6 @@ use springtime::application;
 
 #[tokio::main(flavor = "current_thread")]
 async fn main() {
-  #[cfg(feature = "kubernetes")]
-  pulumi_operator_kubernetes::bind();
   application::create_default()
     .unwrap()
     .run()

@@ -1,7 +1,8 @@
 use derivative::Derivative;
 use std::fs::File;
 use std::path::{Path, PathBuf};
-use std::process::Output;
+use std::process::{ExitStatus, Output};
+use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::Command;
 
 pub struct PulumiCLI {
@@ -15,9 +16,16 @@ impl PulumiCLI {
     }
   }
 
-  pub async fn up(&self, options: UpOptions) -> Output {
+  pub async fn login(&self, options: LoginOptions) -> ExitStatus {
     let mut command = Command::new("pulumi");
-    command.current_dir(&self.workdir).arg("up");
+    command.arg("login").arg(options.url);
+
+    self.spawn(command).await
+  }
+
+  pub async fn up(&self, options: UpOptions) -> ExitStatus {
+    let mut command = Command::new("pulumi");
+    command.arg("up");
 
     if let Some(config) = &options.config {
       command.arg("--config").arg(config);
@@ -68,10 +76,42 @@ impl PulumiCLI {
       command.arg("--show-sames");
     }
 
-    command.output().await.unwrap()
+    self.spawn(command).await
   }
 
-  pub async fn destroy(&self, options: DestroyOptions) -> Output {
+  pub async fn spawn(&self, mut command: Command) -> ExitStatus {
+    command.stdout(std::process::Stdio::piped());
+    command.stderr(std::process::Stdio::piped());
+    command.current_dir(&self.workdir);
+
+    let mut child = command.spawn().unwrap();
+
+    let stdout = child.stdout.take().expect("Failed to open stdout");
+    let stderr = child.stderr.take().expect("Failed to open stderr");
+
+    let stdout_reader = BufReader::new(stdout);
+    let stderr_reader = BufReader::new(stderr);
+
+    let stdout_handle = tokio::spawn(async move {
+      let mut lines = stdout_reader.lines();
+      while let Some(line) = lines.next_line().await.unwrap() {
+        log::info!("{}", line);
+      }
+    });
+
+    let stderr_handle = tokio::spawn(async move {
+      let mut lines = stderr_reader.lines();
+      while let Some(line) = lines.next_line().await.unwrap() {
+        log::error!("{}", line);
+      }
+    });
+
+    tokio::try_join!(stdout_handle, stderr_handle).unwrap();
+
+    child.wait().await.unwrap()
+  }
+
+  pub async fn destroy(&self, options: DestroyOptions) -> ExitStatus {
     let mut command = Command::new("pulumi");
     command.arg("destroy");
 
@@ -85,7 +125,7 @@ impl PulumiCLI {
       command.arg("--skip-preview");
     }
 
-    command.output().await.unwrap()
+    self.spawn(command).await
   }
 }
 
@@ -115,4 +155,8 @@ pub struct DestroyOptions {
   pub stack: Option<String>,
   pub yes: bool,
   pub skip_preview: bool,
+}
+
+pub struct LoginOptions {
+  pub url: String,
 }

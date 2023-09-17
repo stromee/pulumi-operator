@@ -1,3 +1,6 @@
+use futures::task::Spawn;
+use k8s_openapi::api::core::v1::Secret;
+use pulumi_cli::{LoginOptions, PulumiCLI, UpOptions};
 use pulumi_operator_base::Inst;
 use pulumi_operator_kubernetes::kubernetes::service::KubernetesService;
 use pulumi_operator_kubernetes::stack::auth::inner::InnerStackAuthSpec;
@@ -8,13 +11,16 @@ use pulumi_operator_kubernetes::stack::crd::{
 use pulumi_operator_kubernetes::stack::source::git::repository::GitStackSourceRepository;
 use pulumi_operator_kubernetes::stack::source::oci::repository::OciStackSourceRepository;
 use pulumi_operator_kubernetes::stack::source::Source;
+use serde::Deserialize;
 use springtime::runner::ApplicationRunner;
 use springtime_di::future::{BoxFuture, FutureExt};
 use springtime_di::instance_provider::ErrorPtr;
 use springtime_di::{component_alias, Component};
 use std::env::VarError;
+use std::fs::read_to_string;
 use std::sync::Arc;
 use thiserror::Error;
+use tokio::process::Command;
 
 use crate::fetch_service::{FetchError, FetchService};
 
@@ -39,18 +45,92 @@ pub enum PulumiExecutionError {
   StackSourceFetchFailed(#[from] FetchError),
 }
 
+#[derive(Deserialize)]
+pub struct PulumiConfig {
+  pub runtime: String,
+}
+
 impl PulumiExecution {
   pub async fn run_internal(&self) -> Result<(), PulumiExecutionError> {
     let pulumi_stack = self.get_stack().await?;
     let inner_stack_source = self.get_inner_stack_source(&pulumi_stack).await?;
     let inner_stack_auth = self.get_inner_stack_auth(&pulumi_stack).await?;
 
+    let namespace = std::env::var("WATCH_NAMESPACE")
+      .map_err(PulumiExecutionError::CurrentNamespaceNotDefined)?;
+    let access_token = match &inner_stack_auth.access_token_secret {
+      None => None,
+      Some(secret_name) => Some(
+        String::from_utf8(
+          self
+            .kubernetes_service
+            .get_in_namespace::<Secret>(namespace, secret_name)
+            .await
+            .unwrap()
+            .data
+            .unwrap()
+            .get("token")
+            .unwrap()
+            .0
+            .clone(),
+        )
+        .unwrap(),
+      ),
+    };
+
+    if let Some(access_token) = access_token {
+      dbg!(&access_token);
+      std::env::set_var("PULUMI_CONFIG_PASSPHRASE", access_token);
+    }
+
     let working_dir = self
       .fetch_servcice
       .fetch(&inner_stack_source, &pulumi_stack.metadata)
       .await?;
 
-    dbg!("Found inner stack {}", inner_stack_source);
+    let working_dir = match &pulumi_stack.spec.path {
+      None => working_dir,
+      Some(path) => working_dir.join(path),
+    };
+
+    let pulumi_config: PulumiConfig = serde_yaml::from_str(
+      read_to_string(working_dir.join("Pulumi.yaml"))
+        .unwrap()
+        .as_str(),
+    )
+    .unwrap();
+
+    let pulumi = PulumiCLI::new(working_dir.clone());
+
+    match pulumi_config.runtime.as_str() {
+      "nodejs" => {
+        pulumi
+          .spawn({
+            let mut command = Command::new("npm");
+            command.arg("install");
+            command
+          })
+          .await;
+      }
+      _ => {
+        unimplemented!()
+      }
+    }
+
+    pulumi
+      .login(LoginOptions {
+        url: "gs://stromee-pulumi".to_string(),
+      })
+      .await;
+
+    let exit = pulumi
+      .up(UpOptions {
+        stack: pulumi_stack.spec.stack_name.clone(),
+        ..Default::default()
+      })
+      .await;
+
+    dbg!(exit);
 
     Ok(())
   }

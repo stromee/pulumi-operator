@@ -10,7 +10,7 @@ use super::status::StackStatus;
   version = "v1",
   kind = "PulumiStack",
   plural = "pulumistacks",
-  status = "StackStatus",
+  status = "StackStatus"
 )]
 #[kube(namespaced)]
 #[serde(rename_all = "camelCase")]
@@ -18,6 +18,7 @@ pub struct StackSpec {
   pub stack_name: Option<String>,
   pub source: StackSourceRef,
   pub auth: StackAuthRef,
+  pub path: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
@@ -57,4 +58,3 @@ pub enum StackSourceRefType {
   #[serde(rename = "ClusterOciStackSource")]
   ClusterOci,
 }
-

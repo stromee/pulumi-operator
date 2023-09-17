@@ -66,6 +66,7 @@ impl PulumiStackCrdInstaller {
   }
 }
 
+#[cfg(feature = "boot")]
 #[component_alias]
 impl ApplicationRunner for PulumiStackCrdInstaller {
   fn run(&self) -> BoxFuture<'_, Result<(), ErrorPtr>> {

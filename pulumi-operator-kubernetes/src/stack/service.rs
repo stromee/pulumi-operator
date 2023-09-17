@@ -53,7 +53,7 @@ impl PulumiStackService for KubernetesPulumiStackService {
                 "spec": {
                     "containers": [{
                         "name": "pulumi",
-                        "image": "ghcr.io/stromee/pulumi-operator/pulumi-operator-kubernetes-job:1.0.4",
+                        "image": "ghcr.io/stromee/pulumi-operator/pulumi-operator-kubernetes-job:1.0.7",
                         "env": [{
                             "name": "PULUMI_STACK",
                             "value": name
@@ -70,7 +70,9 @@ impl PulumiStackService for KubernetesPulumiStackService {
                     "restartPolicy": "Never"
                 }
             },
-            "backoffLimit": 100
+            "backoffLimit": 100,
+            "successfulJobsHistoryLimit": 1,
+            "failedJobsHistoryLimit": 1
         }
     }))
     .map_err(|err| PulumiStackServiceError::UpdateFailed(err.into()))?;

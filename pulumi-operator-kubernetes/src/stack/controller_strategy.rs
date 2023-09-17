@@ -192,7 +192,6 @@ impl KubernetesPulumiStackControllerStrategy {
 #[async_trait]
 impl PulumiStackControllerStrategy for KubernetesPulumiStackControllerStrategy {
   async fn initialize(&self) -> Result<(), PulumiStackControllerStrategyError> {
-    #[cfg(feature = "boot")]
     self.start_controller().await?;
     Ok(())
   }

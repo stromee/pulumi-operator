@@ -15,3 +15,7 @@ springtime-di = "1.0.0"
 async-trait = "0.1.71"
 thiserror = "1.0.43"
 tokio = { version = "1.29.1", features = ["full"] }
+
+[features]
+boot = []
+default = ["boot"]

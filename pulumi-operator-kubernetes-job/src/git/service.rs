@@ -1,6 +1,9 @@
-use std::{collections::BTreeMap, path::{PathBuf, Path}};
+use std::{
+  collections::BTreeMap,
+  path::{Path, PathBuf},
+};
 
-use git2::{Cred, RemoteCallbacks, FetchOptions, build::RepoBuilder};
+use git2::{build::RepoBuilder, Cred, FetchOptions, RemoteCallbacks};
 use k8s_openapi::{api::core::v1::Secret, ByteString};
 use kube::core::ObjectMeta;
 use pulumi_operator_base::Inst;
@@ -73,7 +76,7 @@ impl GitService {
       let local = LocalSet::new();
 
       local.spawn_local(async move {
-        let res =  async move {
+        let res = async move {
           let mut callback = RemoteCallbacks::new();
 
           if let Some(auth) = &spec.auth {
@@ -86,12 +89,14 @@ impl GitService {
 
           let mut builder = RepoBuilder::new();
           builder.fetch_options(fo);
-          
-          builder.clone("", Path::new(""));
 
-          Ok::<&str, GitError>("/")
-        }.await;
-        tx.send(res).expect("Failed to communicate between threads.");
+          builder.clone(spec.repository.as_str(), Path::new("./source"))?;
+
+          Ok::<&str, GitError>("./source")
+        }
+        .await;
+        tx.send(res)
+          .expect("Failed to communicate between threads.");
       });
 
       rt.block_on(local);
@@ -131,25 +136,33 @@ impl GitController {
       None => "git".into(),
     };
 
-    Some(match auth.kind {
+    match auth.kind {
       GitAuthType::Ssh => {
-        let publickey = match data.get("publickey") {
-          Some(publickey) => Some(String::from_utf8(publickey.clone().0)?),
-          None => None,
-        };
+        // let publickey = match data.get("identity.pub") {
+        //   Some(publickey) => Some(String::from_utf8(publickey.clone().0)?),
+        //   None => None,
+        // };
+
+        //TODO: Somehow github cloning fails with explicit public key?
+        let publickey: Option<String> = None;
 
         let privatekey = String::from_utf8(
           data
-            .get("privatekey")
+            .get("identity")
             .ok_or_else(|| GitError::DataEmpty)?
             .clone()
             .0,
         )?;
 
-        let passphrase = match data.get("passphrase") {
+        let passphrase = match data.get("identity.pass") {
           Some(passphrase) => Some(String::from_utf8(passphrase.clone().0)?),
           None => None,
         };
+
+        //todo: handle known hosts
+        let known_hosts = data
+          .get("known_hosts")
+          .map(|known_hosts| String::from_utf8(known_hosts.clone().0));
 
         callback.credentials(move |_url, username_from_url, _allowed_types| {
           Cred::ssh_key_from_memory(
@@ -178,7 +191,7 @@ impl GitController {
           },
         );
       }
-    });
+    }
     Ok(())
   }
 }
