@@ -1,9 +1,14 @@
+use base64::{decode, encode, Engine};
 use std::{
   collections::BTreeMap,
   path::{Path, PathBuf},
 };
 
-use git2::{build::RepoBuilder, Cred, FetchOptions, RemoteCallbacks};
+use git2::cert::{CertHostkey, SshHostKeyType};
+use git2::{
+  build::RepoBuilder, CertificateCheckStatus, Cred, FetchOptions,
+  RemoteCallbacks,
+};
 use k8s_openapi::{api::core::v1::Secret, ByteString};
 use kube::core::ObjectMeta;
 use pulumi_operator_base::Inst;
@@ -154,17 +159,29 @@ impl GitController {
             .0,
         )?;
 
-        dbg!(&privatekey);
-
         let passphrase = match data.get("identity.pass") {
           Some(passphrase) => Some(String::from_utf8(passphrase.clone().0)?),
           None => None,
         };
 
         //todo: handle known hosts
-        let known_hosts = data
-          .get("known_hosts")
+        let remote_hash = data
+          .get("remote.pub.sha256")
           .map(|known_hosts| String::from_utf8(known_hosts.clone().0));
+
+        if let Some(Ok(remote_hash)) = remote_hash {
+          callback.certificate_check(move |cert, hostname| {
+            if let Some(hostkey) = cert.as_hostkey() {
+              if remote_hash == encode(hostkey.hash_sha256().unwrap()) {
+                return Ok(CertificateCheckStatus::CertificateOk);
+              }
+            }
+            Err(git2::Error::from_str(&format!(
+              "Certificate check failed for host: {}",
+              hostname
+            )))
+          });
+        }
 
         callback.credentials(move |_url, username_from_url, _allowed_types| {
           Cred::ssh_key_from_memory(
