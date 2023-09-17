@@ -4,6 +4,7 @@ USER root
 ENV CARGO_HOME=/root/.cargo
 RUN apt update && apt install -y curl python3-pip
 RUN curl -fsSL https://get.pulumi.com | sh
+ENV PATH="/root/.pulumi/bin:${PATH}"
 RUN cargo install cargo-chef
 
 FROM chef as planner
