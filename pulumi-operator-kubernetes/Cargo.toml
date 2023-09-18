@@ -4,7 +4,6 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-pulumi-operator-base = { path = "../pulumi-operator-base", default-features = false }
 springtime-di = "1.0.0"
 springtime = { version = "1.0.0", features = ["tokio", "threadsafe"] }
 async-trait = "0.1.71"
@@ -22,5 +21,3 @@ warp = "0.3.5"
 
 [features]
 install-crds = []
-boot = ["pulumi-operator-base/boot"]
-default = ["boot"]

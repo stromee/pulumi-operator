@@ -1,5 +1,6 @@
 use std::fmt::Debug;
 
+use crate::Inst;
 use k8s_openapi::apiextensions_apiserver::pkg::apis::apiextensions::v1::CustomResourceDefinition;
 use k8s_openapi::{ClusterResourceScope, NamespaceResourceScope};
 use kube::api::{ObjectList, Patch, PatchParams, PostParams};
@@ -7,8 +8,6 @@ use kube::{Api, Resource, ResourceExt};
 use serde::de::DeserializeOwned;
 use springtime_di::Component;
 use thiserror::Error;
-
-use pulumi_operator_base::Inst;
 
 use crate::kubernetes::client_provider::KubernetesClientProvider;
 

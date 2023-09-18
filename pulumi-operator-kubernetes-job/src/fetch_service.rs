@@ -1,8 +1,8 @@
 use std::path::{Path, PathBuf};
 
 use kube::core::ObjectMeta;
-use pulumi_operator_base::Inst;
 use pulumi_operator_kubernetes::stack::source::Source;
+use pulumi_operator_kubernetes::Inst;
 use springtime_di::Component;
 use thiserror::Error;
 

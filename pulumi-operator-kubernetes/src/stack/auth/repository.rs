@@ -1,4 +1,4 @@
-use pulumi_operator_base::Inst;
+use crate::Inst;
 use springtime_di::Component;
 
 use crate::kubernetes::service::KubernetesService;

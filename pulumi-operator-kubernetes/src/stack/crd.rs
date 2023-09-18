@@ -1,3 +1,4 @@
+use k8s_openapi::api::core::v1::Container;
 use k8s_openapi::schemars::JsonSchema;
 use kube::CustomResource;
 use serde::{Deserialize, Serialize};
@@ -19,6 +20,7 @@ pub struct StackSpec {
   pub source: StackSourceRef,
   pub auth: StackAuthRef,
   pub path: Option<String>,
+  pub init_containers: Option<Vec<Container>>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]

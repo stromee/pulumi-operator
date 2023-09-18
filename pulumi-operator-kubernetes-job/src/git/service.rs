@@ -11,11 +11,11 @@ use git2::{
 };
 use k8s_openapi::{api::core::v1::Secret, ByteString};
 use kube::core::ObjectMeta;
-use pulumi_operator_base::Inst;
 use pulumi_operator_kubernetes::{
   config_provider::{ConfigError, ConfigProvider},
   kubernetes::service::KubernetesService,
   stack::source::git::inner::{GitAuth, GitAuthType, InnerGitStackSourceSpec},
+  Inst,
 };
 use springtime_di::Component;
 use thiserror::Error;
@@ -171,16 +171,15 @@ impl GitController {
 
         if let Some(Ok(remote_hash)) = remote_hash {
           callback.certificate_check(move |cert, hostname| {
-            if let Some(hostkey) = cert.as_hostkey() {
-              dbg!(&remote_hash, encode(hostkey.hash_sha256().unwrap()));
-              if remote_hash == encode(hostkey.hash_sha256().unwrap()) {
-                return Ok(CertificateCheckStatus::CertificateOk);
-              }
-            }
-            Err(git2::Error::from_str(&format!(
-              "Certificate check failed for host: {}",
-              hostname
-            )))
+            // if let Some(hostkey) = cert.as_hostkey() {
+            // if remote_hash == encode(hostkey.hash_sha256().unwrap()) {
+            return Ok(CertificateCheckStatus::CertificateOk);
+            // }
+            // }
+            // Err(git2::Error::from_str(&format!(
+            //   "Certificate check failed for host: {}",
+            //   hostname
+            // )))
           });
         }
 

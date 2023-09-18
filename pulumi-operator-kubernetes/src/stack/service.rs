@@ -2,18 +2,29 @@ use async_trait::async_trait;
 use futures::{StreamExt, TryStreamExt};
 use k8s_openapi::api::batch::v1::Job;
 use kube::api::{DeleteParams, PostParams, WatchEvent};
-use pulumi_operator_base::stack::cached_stack::CachedPulumiStack;
-use pulumi_operator_base::stack::service::{
-  PulumiStackService, PulumiStackServiceError,
-};
-use pulumi_operator_base::Inst;
 use serde_json::json;
 use springtime_di::{component_alias, Component};
+use std::error::Error;
 use std::time::Duration;
+use thiserror::Error;
 use tokio::time::timeout;
 
 use crate::config_provider::ConfigProvider;
 use crate::kubernetes::service::KubernetesService;
+use crate::stack::crd::PulumiStack;
+use crate::Inst;
+
+#[derive(Debug, Error)]
+pub enum PulumiStackServiceError {
+  #[error("pulumi task cancellation failed")]
+  CancelFailed,
+
+  #[error("Configuration error: {0}")]
+  Config(Box<dyn Error + Sync + Send>),
+
+  #[error("pulumi stack update failed: {0}")]
+  UpdateFailed(Box<dyn Error + Sync + Send>),
+}
 
 #[derive(Component)]
 pub struct KubernetesPulumiStackService {
@@ -21,17 +32,15 @@ pub struct KubernetesPulumiStackService {
   config_provider: Inst<ConfigProvider>,
 }
 
-#[component_alias]
-#[async_trait]
-impl PulumiStackService for KubernetesPulumiStackService {
-  async fn update_stack(
+impl KubernetesPulumiStackService {
+  pub(crate) async fn update_stack(
     &self,
-    stack: CachedPulumiStack,
+    stack: PulumiStack,
   ) -> Result<(), PulumiStackServiceError> {
     self.cancel_stack(stack.clone()).await?;
-    let mut parts = stack.name.splitn(2, '/');
-    let namespace = parts.next().unwrap();
-    let name = parts.next().unwrap();
+    let name = stack.metadata.name.unwrap();
+    let namespace = stack.metadata.namespace.unwrap();
+    let init_containers = stack.spec.init_containers;
 
     let operator_namespace = self
       .config_provider
@@ -51,9 +60,10 @@ impl PulumiStackService for KubernetesPulumiStackService {
                     "name": "pulumi"
                 },
                 "spec": {
+                    "initContainers": init_containers,
                     "containers": [{
                         "name": "pulumi",
-                        "image": "ghcr.io/stromee/pulumi-operator/pulumi-operator-kubernetes-job:1.0.12",
+                        "image": "ghcr.io/stromee/pulumi-operator/pulumi-operator-kubernetes-job:1.0.13",
                         "env": [{
                             "name": "PULUMI_STACK",
                             "value": name
@@ -94,24 +104,23 @@ impl PulumiStackService for KubernetesPulumiStackService {
     Ok(())
   }
 
-  async fn cancel_stack(
+  pub(crate) async fn cancel_stack(
     &self,
-    stack: CachedPulumiStack,
+    stack: PulumiStack,
   ) -> Result<(), PulumiStackServiceError> {
-    let mut parts = stack.name.splitn(2, '/');
-    let namespace = parts.next().unwrap();
-    let name = parts.next().unwrap();
+    let namespace = stack.metadata.namespace.unwrap();
+    let name = stack.metadata.name.unwrap();
     let api = self
       .kubernetes_service
       .all_in_namespace_api::<Job>("pulumi-operator")
       .await;
 
-    if api.get(name).await.is_err() {
+    if api.get(&name).await.is_err() {
       return Ok(());
     };
 
     api
-      .delete(name, &DeleteParams::foreground().grace_period(15))
+      .delete(&name, &DeleteParams::foreground().grace_period(15))
       .await
       .expect("todo");
 

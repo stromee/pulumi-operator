@@ -2,6 +2,7 @@ use std::pin::Pin;
 use std::sync::Arc;
 use std::time::Duration;
 
+use crate::Inst;
 use async_trait::async_trait;
 use futures::{Stream, StreamExt};
 use kube::core::admission::{
@@ -17,16 +18,22 @@ use thiserror::Error;
 use tokio::sync::Mutex;
 use warp::Filter;
 
-use pulumi_operator_base::stack::cached_stack::CachedPulumiStack;
-use pulumi_operator_base::stack::controller_strategy::{
-  PulumiStackControllerStrategy, PulumiStackControllerStrategyError,
-};
-use pulumi_operator_base::stack::service::PulumiStackService;
-use pulumi_operator_base::Inst;
-
 use crate::kubernetes::service::KubernetesService;
+use crate::stack::service::{
+  KubernetesPulumiStackService, PulumiStackServiceError,
+};
 
 use super::crd::PulumiStack;
+
+#[derive(Debug, Error)]
+pub enum PulumiStackControllerStrategyError {
+  #[error("could not check for changed stacks")]
+  Unknown(#[from] Box<dyn std::error::Error + Send + Sync>),
+  #[error("pulumi stack service error occurred")]
+  Service(#[from] PulumiStackServiceError),
+  #[error("could not execute controller update")]
+  UpdateWatchFailed,
+}
 
 const FINALIZER: &str = "pulumi.stromee.de";
 
@@ -47,7 +54,7 @@ type ControllerStream = Pin<
 #[derive(Clone, Component)]
 pub struct KubernetesPulumiStackControllerStrategy {
   kubernetes_service: Inst<KubernetesService>,
-  stack_service: Inst<dyn PulumiStackService + Send + Sync>,
+  stack_service: Inst<KubernetesPulumiStackService>,
   #[component(default)]
   controller_stream: Arc<Mutex<Option<ControllerStream>>>,
 }
@@ -55,7 +62,7 @@ pub struct KubernetesPulumiStackControllerStrategy {
 impl KubernetesPulumiStackControllerStrategy {
   async fn handle_deletion(
     &self,
-    stack: CachedPulumiStack,
+    stack: PulumiStack,
   ) -> Result<(), PulumiStackControllerStrategyError> {
     self.stack_service.cancel_stack(stack).await?;
     Ok(())
@@ -63,7 +70,7 @@ impl KubernetesPulumiStackControllerStrategy {
 
   async fn handle_creation(
     &self,
-    stack: CachedPulumiStack,
+    stack: PulumiStack,
   ) -> Result<(), PulumiStackControllerStrategyError> {
     self.stack_service.update_stack(stack).await?;
     Ok(())
@@ -71,7 +78,7 @@ impl KubernetesPulumiStackControllerStrategy {
 
   async fn handle_update(
     &self,
-    stack: CachedPulumiStack,
+    stack: PulumiStack,
   ) -> Result<(), PulumiStackControllerStrategyError> {
     self.stack_service.update_stack(stack).await?;
     Ok(())
@@ -188,15 +195,15 @@ impl KubernetesPulumiStackControllerStrategy {
   }
 }
 
-#[component_alias]
-#[async_trait]
-impl PulumiStackControllerStrategy for KubernetesPulumiStackControllerStrategy {
-  async fn initialize(&self) -> Result<(), PulumiStackControllerStrategyError> {
+impl KubernetesPulumiStackControllerStrategy {
+  pub async fn initialize(
+    &self,
+  ) -> Result<(), PulumiStackControllerStrategyError> {
     self.start_controller().await?;
     Ok(())
   }
 
-  async fn update(&self) -> Result<(), PulumiStackControllerStrategyError> {
+  pub async fn update(&self) -> Result<(), PulumiStackControllerStrategyError> {
     let mut controller_stream = self.controller_stream.lock().await;
     let mut controller_stream = controller_stream
       .as_mut()
@@ -217,24 +224,4 @@ pub enum PulumiStackConversionError {
   NameEmpty,
   #[error("namespace is empty")]
   NamespaceEmpty,
-}
-
-impl TryFrom<PulumiStack> for CachedPulumiStack {
-  type Error = PulumiStackConversionError;
-
-  fn try_from(k8s_stack: PulumiStack) -> Result<Self, Self::Error> {
-    Ok(Self {
-      name: format!(
-        "{}/{}",
-        k8s_stack
-          .metadata
-          .namespace
-          .ok_or(PulumiStackConversionError::NamespaceEmpty)?,
-        k8s_stack
-          .metadata
-          .name
-          .ok_or(PulumiStackConversionError::NameEmpty)?
-      ),
-    })
-  }
 }

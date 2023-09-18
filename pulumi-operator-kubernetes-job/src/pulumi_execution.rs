@@ -1,7 +1,6 @@
 use futures::task::Spawn;
 use k8s_openapi::api::core::v1::Secret;
 use pulumi_cli::{CancelOptions, LoginOptions, PulumiCLI, UpOptions};
-use pulumi_operator_base::Inst;
 use pulumi_operator_kubernetes::kubernetes::service::KubernetesService;
 use pulumi_operator_kubernetes::stack::auth::inner::InnerStackAuthSpec;
 use pulumi_operator_kubernetes::stack::auth::repository::StackAuthRepository;
@@ -11,6 +10,7 @@ use pulumi_operator_kubernetes::stack::crd::{
 use pulumi_operator_kubernetes::stack::source::git::repository::GitStackSourceRepository;
 use pulumi_operator_kubernetes::stack::source::oci::repository::OciStackSourceRepository;
 use pulumi_operator_kubernetes::stack::source::Source;
+use pulumi_operator_kubernetes::Inst;
 use serde::Deserialize;
 use springtime::runner::ApplicationRunner;
 use springtime_di::future::{BoxFuture, FutureExt};

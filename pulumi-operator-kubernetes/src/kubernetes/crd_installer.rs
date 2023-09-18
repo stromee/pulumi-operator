@@ -1,13 +1,12 @@
 use std::sync::Arc;
 
+use crate::Inst;
 use kube::CustomResourceExt;
 use springtime::future::FutureExt;
 use springtime::runner::ApplicationRunner;
 use springtime_di::future::BoxFuture;
 use springtime_di::instance_provider::ErrorPtr;
 use springtime_di::{component_alias, Component};
-
-use pulumi_operator_base::Inst;
 
 use crate::kubernetes::service::{
   KubernetesCrdInstallError, KubernetesService,
