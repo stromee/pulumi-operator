@@ -63,7 +63,7 @@ impl KubernetesPulumiStackService {
                     "initContainers": init_containers,
                     "containers": [{
                         "name": "pulumi",
-                        "image": "ghcr.io/stromee/pulumi-operator/pulumi-operator-kubernetes-job:1.0.13",
+                        "image": "ghcr.io/stromee/pulumi-operator/pulumi-operator-kubernetes-job:1.0.15",
                         "env": [{
                             "name": "PULUMI_STACK",
                             "value": name

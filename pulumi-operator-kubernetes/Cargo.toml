@@ -8,7 +8,7 @@ springtime-di = "1.0.0"
 springtime = { version = "1.0.0", features = ["tokio", "threadsafe"] }
 async-trait = "0.1.71"
 kube = { version = "0.85.0", features = ["runtime", "derive", "admission"] }
-k8s-openapi = { version = "0.19.0", features = ["schemars"] }
+k8s-openapi = { version = "0.19.0", features = ["schemars", "v1_26"] }
 tokio = { version = "1.29.1", features = ["full"] }
 thiserror = "1.0.43"
 serde = "1.0.171"
@@ -21,3 +21,5 @@ warp = "0.3.5"
 
 [features]
 install-crds = []
+boot = []
+default = ["boot"]
