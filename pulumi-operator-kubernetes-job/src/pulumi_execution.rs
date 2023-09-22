@@ -64,7 +64,7 @@ impl PulumiExecution {
         String::from_utf8(
           self
             .kubernetes_service
-            .get_in_namespace::<Secret>(namespace, secret_name)
+            .get_in_namespace::<Secret>(namespace.clone(), secret_name)
             .await
             .unwrap()
             .data
@@ -78,8 +78,31 @@ impl PulumiExecution {
       ),
     };
 
+    if let Some(secret_name) = &inner_stack_auth.backend_auth_secret {
+      let data = self
+        .kubernetes_service
+        .get_in_namespace::<Secret>(namespace, secret_name)
+        .await
+        .unwrap()
+        .data
+        .unwrap();
+
+      let access_key_id =
+        String::from_utf8(data.get("AWS_ACCESS_KEY_ID").unwrap().0.clone())
+          .unwrap();
+      let default_region =
+        String::from_utf8(data.get("AWS_DEFAULT_REGION").unwrap().0.clone())
+          .unwrap();
+      let secret_access_key =
+        String::from_utf8(data.get("AWS_SECRET_ACCESS_KEY").unwrap().0.clone())
+          .unwrap();
+
+      std::env::set_var("AWS_ACCESS_KEY_ID", access_key_id);
+      std::env::set_var("AWS_DEFAULT_REGION", default_region);
+      std::env::set_var("AWS_SECRET_ACCESS_KEY", secret_access_key);
+    }
+
     if let Some(access_token) = access_token {
-      dbg!(&access_token);
       std::env::set_var("PULUMI_CONFIG_PASSPHRASE", access_token);
     }
 
@@ -119,7 +142,7 @@ impl PulumiExecution {
 
     pulumi
       .login(LoginOptions {
-        url: "gs://stromee-pulumi".to_string(),
+        url: inner_stack_auth.backend,
       })
       .await;
 

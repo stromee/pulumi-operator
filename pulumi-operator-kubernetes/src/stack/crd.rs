@@ -1,4 +1,4 @@
-use k8s_openapi::api::core::v1::Container;
+use k8s_openapi::api::core::v1::{Container, EnvVar, Volume, VolumeMount};
 use k8s_openapi::schemars::JsonSchema;
 use kube::CustomResource;
 use serde::{Deserialize, Serialize};
@@ -21,6 +21,15 @@ pub struct StackSpec {
   pub auth: StackAuthRef,
   pub path: Option<String>,
   pub init_containers: Option<Vec<Container>>,
+  pub extra_volumes: Option<Vec<Volume>>,
+  pub main_container: Option<MainContainerOverride>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct MainContainerOverride {
+  pub extra_volume_mounts: Option<Vec<VolumeMount>>,
+  pub extra_env: Option<Vec<EnvVar>>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
