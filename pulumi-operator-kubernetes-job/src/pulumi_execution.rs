@@ -140,6 +140,12 @@ impl PulumiExecution {
       }
     }
 
+    let stack_name = pulumi_stack
+      .spec
+      .stack_name
+      .clone()
+      .unwrap_or(pulumi_stack.metadata.name.clone().unwrap());
+
     pulumi
       .login(LoginOptions {
         url: inner_stack_auth.backend,
@@ -148,13 +154,13 @@ impl PulumiExecution {
 
     pulumi
       .cancel(CancelOptions {
-        stack: pulumi_stack.spec.stack_name.clone(),
+        stack: Some(stack_name.clone()),
       })
       .await;
 
     let exit = pulumi
       .up(UpOptions {
-        stack: pulumi_stack.spec.stack_name.clone(),
+        stack: Some(stack_name.clone()),
         ..Default::default()
       })
       .await;
