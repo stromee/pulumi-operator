@@ -19,6 +19,8 @@ jobs:
           image-name: pulumi-operator-kubernetes-job
           dockerfile: pulumi-operator-kubernetes-job/Dockerfile
           extract-git-tag: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
   publish-pulumi-operator-kubernetes:
     runs-on: ubuntu-latest
     steps:
@@ -30,3 +32,5 @@ jobs:
           image-name: pulumi-operator-kubernetes
           dockerfile: pulumi-operator-kubernetes/Dockerfile
           extract-git-tag: true
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
