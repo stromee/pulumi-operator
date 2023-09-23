@@ -2,7 +2,12 @@ FROM rust:1.71-buster as chef
 WORKDIR /usr/src/pulumi-operator
 USER root
 ENV CARGO_HOME=/root/.cargo
-RUN apt update && apt install -y curl python3-pip npm
+RUN apt update && apt install -y curl python3-pip
+SHELL ["/bin/bash", "--login", "-c"]
+
+RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
+RUN nvm install 17
+
 RUN curl -fsSL https://get.pulumi.com | sh
 ENV PATH="/root/.pulumi/bin:${PATH}"
 RUN cargo install cargo-chef
