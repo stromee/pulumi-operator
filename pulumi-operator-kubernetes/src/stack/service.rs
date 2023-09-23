@@ -1,6 +1,6 @@
 use async_trait::async_trait;
 use futures::{StreamExt, TryStreamExt};
-use k8s_openapi::api::batch::v1::Job;
+use k8s_openapi::api::batch::v1::{CronJob, Job};
 use k8s_openapi::api::core::v1::{Container, ServiceAccount};
 use k8s_openapi::api::rbac::v1::{Role, RoleBinding};
 use k8s_openapi::apimachinery::pkg::apis::meta::v1::ObjectMeta;
@@ -59,7 +59,6 @@ impl KubernetesPulumiStackService {
     let mut main_container: Container = serde_json::from_value(json!({
         "name": "pulumi",
         "image": "ghcr.io/stromee/pulumi-operator/pulumi-operator-kubernetes-job:1.0.18",
-        "command": ["sleep", "10000"],
         "env": [{
             "name": "PULUMI_STACK",
             "value": name
@@ -98,23 +97,31 @@ impl KubernetesPulumiStackService {
 
     let job = serde_json::from_value(json!({
         "apiVersion": "batch/v1",
-        "kind": "Job",
+        "kind": "CronJob",
         "metadata": {
             "name": name,
             "namespace": namespace.clone()
         },
         "spec": {
-            "template": {
-                "metadata": {
-                    "name": "pulumi"
-                },
+            "schedule": "* * * * *",
+            "concurrencyPolicy": "Forbid",
+            "jobTemplate": {
                 "spec": {
-                    "initContainers": init_containers,
-                    "containers": [main_container],
-                    "volumes": extra_volumes,
-                    "serviceAccountName": &name,
-                    "restartPolicy": "Never"
-                }
+                    "template": {
+                        "metadata": {
+                            "name": "pulumi"
+                        },
+                        "spec": {
+                            "initContainers": init_containers,
+                            "containers": [main_container],
+                            "volumes": extra_volumes,
+                            "serviceAccountName": &name,
+                            "restartPolicy": "Never"
+                        }
+                    },
+                    "successfulJobsHistoryLimit": 1,
+                    "failedJobsHistoryLimit": 1
+                },
             },
             "backoffLimit": 100,
             "successfulJobsHistoryLimit": 1,
@@ -125,7 +132,7 @@ impl KubernetesPulumiStackService {
 
     let api = self
       .kubernetes_service
-      .all_in_namespace_api::<Job>(namespace.clone())
+      .all_in_namespace_api::<CronJob>(namespace.clone())
       .await;
 
     api
@@ -272,7 +279,7 @@ impl KubernetesPulumiStackService {
     let name = stack.metadata.name.unwrap();
     let api = self
       .kubernetes_service
-      .all_in_namespace_api::<Job>(namespace.clone())
+      .all_in_namespace_api::<CronJob>(namespace.clone())
       .await;
 
     if api.get(&name).await.is_err() {
@@ -291,7 +298,7 @@ impl KubernetesPulumiStackService {
       .expect("Failed to watch pod")
       .boxed();
 
-    let timeout_duration = Duration::from_secs(20);
+    let timeout_duration = Duration::from_secs(1800);
     timeout(timeout_duration, async {
       while let Some(status) =
         stream.try_next().await.expect("Error while watching")
