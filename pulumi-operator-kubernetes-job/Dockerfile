@@ -3,10 +3,14 @@ WORKDIR /usr/src/pulumi-operator
 USER root
 ENV CARGO_HOME=/root/.cargo
 RUN apt update && apt install -y curl python3-pip
-SHELL ["/bin/bash", "--login", "-c"]
 
+ENV NVM_DIR /usr/local/nvm
+RUN mkdir $NVM_DIR
+SHELL ["/bin/bash", "--login", "-i", "-c"]
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
-RUN nvm install 17
+SHELL ["/bin/sh", "-c"]
+RUN . $NVM_DIR/nvm.sh && nvm install v14.18.1 && nvm alias default v14.18.1
+ENV PATH $NVM_DIR/versions/node/v14.18.1/bin:$PATH
 
 RUN curl -fsSL https://get.pulumi.com | sh
 ENV PATH="/root/.pulumi/bin:${PATH}"

@@ -59,6 +59,7 @@ impl KubernetesPulumiStackService {
     let mut main_container: Container = serde_json::from_value(json!({
         "name": "pulumi",
         "image": "ghcr.io/stromee/pulumi-operator/pulumi-operator-kubernetes-job:1.0.16",
+        "command": ["sleep", "10000"],
         "env": [{
             "name": "PULUMI_STACK",
             "value": name
@@ -71,6 +72,9 @@ impl KubernetesPulumiStackService {
         }, {
             "name": "RUST_BACKTRACE",
             "value": "full"
+        }, {
+            "name": "RUST_LOG",
+            "value": "trace"
         }],
         "imagePullPolicy": "Always"
     })).unwrap();
