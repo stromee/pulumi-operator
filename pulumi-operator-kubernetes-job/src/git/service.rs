@@ -7,7 +7,7 @@ use std::{
 use git2::cert::{CertHostkey, SshHostKeyType};
 use git2::{
   build::RepoBuilder, CertificateCheckStatus, Cred, FetchOptions,
-  RemoteCallbacks,
+  RemoteCallbacks, Repository,
 };
 use k8s_openapi::{api::core::v1::Secret, ByteString};
 use kube::core::ObjectMeta;
@@ -98,7 +98,18 @@ impl GitService {
           }
           builder.fetch_options(fo);
 
-          builder.clone(spec.repository.as_str(), Path::new("./source"))?;
+          let repo =
+            builder.clone(spec.repository.as_str(), Path::new("./source"))?;
+
+          let mut callback = RemoteCallbacks::new();
+
+          if let Some(auth) = &spec.auth {
+            let data = git_controller.get_secret(&namespace, &auth).await?;
+            git_controller.build_callback(auth, &data, &mut callback)?;
+          }
+
+          fetch_git_notes(&repo, callback)?;
+          panic!();
 
           Ok::<&str, GitError>("./source")
         }
@@ -111,6 +122,22 @@ impl GitService {
     });
     rx.await?
   }
+}
+
+fn fetch_git_notes(
+  repo: &Repository,
+  callback: RemoteCallbacks,
+) -> Result<(), git2::Error> {
+  let mut remote = repo.find_remote("origin")?;
+  let refspec = "refs/notes/*:refs/notes/*";
+
+  // Setup FetchOptions with your callback
+  let mut fetch_options = FetchOptions::new();
+  fetch_options.remote_callbacks(callback);
+
+  remote.fetch(&[refspec], Some(&mut fetch_options), None)?;
+
+  Ok(())
 }
 
 struct GitController {
