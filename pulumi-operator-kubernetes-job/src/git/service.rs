@@ -109,7 +109,6 @@ impl GitService {
           }
 
           fetch_git_notes(&repo, callback)?;
-          panic!();
 
           Ok::<&str, GitError>("./source")
         }
