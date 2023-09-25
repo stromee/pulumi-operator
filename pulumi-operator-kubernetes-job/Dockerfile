@@ -2,7 +2,7 @@ FROM rust:1.71-buster as chef
 WORKDIR /usr/src/pulumi-operator
 USER root
 ENV CARGO_HOME=/root/.cargo
-RUN apt update && apt install -y curl python3-pip
+RUN apt update && apt install -y curl python3-pip git
 
 ENV NVM_DIR /usr/local/nvm
 RUN mkdir $NVM_DIR
