@@ -93,6 +93,9 @@ impl GitService {
           fo.remote_callbacks(callback);
 
           let mut builder = RepoBuilder::new();
+          if let Some(git_ref) = spec.git_ref {
+            builder.branch(&git_ref);
+          }
           builder.fetch_options(fo);
 
           builder.clone(spec.repository.as_str(), Path::new("./source"))?;
