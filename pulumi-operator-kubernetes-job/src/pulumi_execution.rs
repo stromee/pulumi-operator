@@ -161,6 +161,7 @@ impl PulumiExecution {
     let exit = pulumi
       .up(UpOptions {
         stack: Some(stack_name.clone()),
+        refresh: Some(true),
         ..Default::default()
       })
       .await;
