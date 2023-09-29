@@ -2,6 +2,7 @@ use k8s_openapi::api::core::v1::{Container, EnvVar, Volume, VolumeMount};
 use k8s_openapi::schemars::JsonSchema;
 use kube::CustomResource;
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 
 use super::status::StackStatus;
 
@@ -23,6 +24,7 @@ pub struct StackSpec {
   pub init_containers: Option<Vec<Container>>,
   pub extra_volumes: Option<Vec<Volume>>,
   pub main_container: Option<MainContainerOverride>,
+  pub main_pod: Option<MainPodOverride>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
@@ -30,6 +32,12 @@ pub struct StackSpec {
 pub struct MainContainerOverride {
   pub extra_volume_mounts: Option<Vec<VolumeMount>>,
   pub extra_env: Option<Vec<EnvVar>>,
+}
+
+#[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
+#[serde(rename_all = "camelCase")]
+pub struct MainPodOverride {
+  pub extra_annotations: Option<BTreeMap<String, String>>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]

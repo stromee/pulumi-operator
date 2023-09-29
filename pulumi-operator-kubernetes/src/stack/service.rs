@@ -50,6 +50,7 @@ impl KubernetesPulumiStackService {
     let init_containers = stack.spec.init_containers;
     let extra_volumes = stack.spec.extra_volumes;
     let container_override = stack.spec.main_container;
+    let pod_override = stack.spec.main_pod;
 
     let operator_namespace = self
       .config_provider
@@ -58,7 +59,7 @@ impl KubernetesPulumiStackService {
 
     let mut main_container: Container = serde_json::from_value(json!({
         "name": "pulumi",
-        "image": "ghcr.io/stromee/pulumi-operator/pulumi-operator-kubernetes-job:1.0.22",
+        "image": "ghcr.io/stromee/pulumi-operator/pulumi-operator-kubernetes-job:1.0.23",
         "env": [{
             "name": "PULUMI_STACK",
             "value": name
@@ -95,11 +96,15 @@ impl KubernetesPulumiStackService {
       }
     }
 
+    let pod_annotations = pod_override
+      .as_ref()
+      .and_then(|pod| pod.extra_annotations.clone());
+
     let job = serde_json::from_value(json!({
         "apiVersion": "batch/v1",
         "kind": "CronJob",
         "metadata": {
-            "name": name,
+            "name": format!("pulumi-{}", name),
             "namespace": namespace.clone()
         },
         "spec": {
@@ -109,7 +114,8 @@ impl KubernetesPulumiStackService {
                 "spec": {
                     "template": {
                         "metadata": {
-                            "name": "pulumi"
+                            "name": "pulumi",
+                            "annotations": pod_annotations
                         },
                         "spec": {
                             "initContainers": init_containers,
@@ -198,7 +204,7 @@ impl KubernetesPulumiStackService {
         "rules": [{
             "apiGroups": ["*"],
             "resources": ["*"],
-            "verbs": ["get", "list", "watch"]
+            "verbs": ["*"]
         }]
     }))
     .unwrap();
@@ -282,12 +288,15 @@ impl KubernetesPulumiStackService {
       .all_in_namespace_api::<CronJob>(namespace.clone())
       .await;
 
-    if api.get(&name).await.is_err() {
+    if api.get(&format!("pulumi-{}", &name)).await.is_err() {
       return Ok(());
     };
 
     api
-      .delete(&name, &DeleteParams::foreground().grace_period(15))
+      .delete(
+        &format!("pulumi-{}", &name),
+        &DeleteParams::foreground().grace_period(15),
+      )
       .await
       .expect("todo");
 
@@ -305,7 +314,8 @@ impl KubernetesPulumiStackService {
       {
         match status {
           WatchEvent::Deleted(job)
-            if job.metadata.name == Some(name.clone().to_string()) =>
+            if job.metadata.name
+              == Some(format!("pulumi-{}", &name).clone().to_string()) =>
           {
             break;
           }
