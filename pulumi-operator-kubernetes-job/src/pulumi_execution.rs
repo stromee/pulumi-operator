@@ -1,6 +1,8 @@
 use futures::task::Spawn;
 use k8s_openapi::api::core::v1::Secret;
-use pulumi_cli::{CancelOptions, LoginOptions, PulumiCLI, UpOptions};
+use pulumi_cli::{
+  CancelOptions, LoginOptions, PulumiCLI, StackInitOptions, UpOptions,
+};
 use pulumi_operator_kubernetes::kubernetes::service::KubernetesService;
 use pulumi_operator_kubernetes::stack::auth::inner::InnerStackAuthSpec;
 use pulumi_operator_kubernetes::stack::auth::repository::StackAuthRepository;
@@ -149,6 +151,12 @@ impl PulumiExecution {
     pulumi
       .login(LoginOptions {
         url: inner_stack_auth.backend,
+      })
+      .await;
+
+    pulumi
+      .stack_init(StackInitOptions {
+        stack: stack_name.clone(),
       })
       .await;
 
