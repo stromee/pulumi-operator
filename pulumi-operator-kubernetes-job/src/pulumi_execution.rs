@@ -157,6 +157,7 @@ impl PulumiExecution {
     pulumi
       .stack_init(StackInitOptions {
         stack: stack_name.clone(),
+        organization: pulumi_stack.spec.organization.clone()
       })
       .await;
 

@@ -25,7 +25,12 @@ impl PulumiCLI {
 
   pub async fn stack_init(&self, options: StackInitOptions) -> ExitStatus {
     let mut command = Command::new("pulumi");
-    command.arg("stack").arg("init").arg(options.stack);
+    let combined_stack = if let Some(organization) = options.organization {
+      format!("{}/{}", organization, options.stack)
+    } else {
+      options.stack
+    };
+    command.arg("stack").arg("init").arg(combined_stack);
 
     self.spawn(command).await
   }
@@ -172,6 +177,7 @@ pub struct CancelOptions {
 }
 pub struct StackInitOptions {
   pub stack: String,
+  pub organization: Option<String>,
 }
 
 pub struct DestroyOptions {

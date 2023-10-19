@@ -25,6 +25,7 @@ pub struct StackSpec {
   pub extra_volumes: Option<Vec<Volume>>,
   pub main_container: Option<MainContainerOverride>,
   pub main_pod: Option<MainPodOverride>,
+  pub organization: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Clone, Debug, JsonSchema)]
