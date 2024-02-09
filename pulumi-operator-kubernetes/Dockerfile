@@ -1,4 +1,4 @@
-FROM rust:1.71-buster as chef
+FROM rust:1.74-buster as chef
 WORKDIR /usr/src/pulumi-operator
 USER root
 ENV CARGO_HOME=/root/.cargo
