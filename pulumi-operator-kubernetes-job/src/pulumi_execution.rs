@@ -20,6 +20,7 @@ use springtime_di::instance_provider::ErrorPtr;
 use springtime_di::{component_alias, Component};
 use std::env::VarError;
 use std::fs::read_to_string;
+use std::process::exit;
 use std::sync::Arc;
 use thiserror::Error;
 use tokio::process::Command;
@@ -175,9 +176,7 @@ impl PulumiExecution {
       })
       .await;
 
-    dbg!(exit);
-
-    Ok(())
+    std::process::exit(exit.code().unwrap_or(0));
   }
 
   pub async fn get_stack(&self) -> Result<PulumiStack, PulumiExecutionError> {

@@ -59,7 +59,7 @@ impl KubernetesPulumiStackService {
 
     let mut main_container: Container = serde_json::from_value(json!({
         "name": "pulumi",
-        "image": "ghcr.io/stromee/pulumi-operator/pulumi-operator-kubernetes-job:1.0.29",
+        "image": "ghcr.io/stromee/pulumi-operator/pulumi-operator-kubernetes-job:1.0.30",
         "env": [{
             "name": "PULUMI_STACK",
             "value": name
@@ -113,6 +113,7 @@ impl KubernetesPulumiStackService {
             "jobTemplate": {
                 "spec": {
                     "activeDeadlineSeconds": 300,
+                    "backoffLimit": 10000,
                     "template": {
                         "metadata": {
                             "name": "pulumi",
@@ -130,7 +131,6 @@ impl KubernetesPulumiStackService {
                     "failedJobsHistoryLimit": 1
                 },
             },
-            "backoffLimit": 100,
             "successfulJobsHistoryLimit": 1,
             "failedJobsHistoryLimit": 1
         }
