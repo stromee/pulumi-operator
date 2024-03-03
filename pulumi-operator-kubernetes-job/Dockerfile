@@ -9,8 +9,8 @@ RUN mkdir $NVM_DIR
 SHELL ["/bin/bash", "--login", "-i", "-c"]
 RUN curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
 SHELL ["/bin/sh", "-c"]
-RUN . $NVM_DIR/nvm.sh && nvm install v14.18.1 && nvm alias default v14.18.1
-ENV PATH $NVM_DIR/versions/node/v14.18.1/bin:$PATH
+RUN . $NVM_DIR/nvm.sh && nvm install v16.20.2 && nvm alias default v16.20.2
+ENV PATH $NVM_DIR/versions/node/v16.20.2/bin:$PATH
 
 RUN curl -fsSL https://get.pulumi.com | sh
 ENV PATH="/root/.pulumi/bin:${PATH}"
