@@ -59,7 +59,7 @@ impl KubernetesPulumiStackService {
 
     let mut main_container: Container = serde_json::from_value(json!({
         "name": "pulumi",
-        "image": "ghcr.io/stromee/pulumi-operator/pulumi-operator-kubernetes-job:1.0.30",
+        "image": "ghcr.io/stromee/pulumi-operator/pulumi-operator-kubernetes-job:1.0.31",
         "env": [{
             "name": "PULUMI_STACK",
             "value": name
@@ -112,7 +112,7 @@ impl KubernetesPulumiStackService {
             "concurrencyPolicy": "Forbid",
             "jobTemplate": {
                 "spec": {
-                    "activeDeadlineSeconds": 300,
+                    "activeDeadlineSeconds": 1 * 60 * 60, // 1 hour timeout
                     "backoffLimit": 10000,
                     "template": {
                         "metadata": {
