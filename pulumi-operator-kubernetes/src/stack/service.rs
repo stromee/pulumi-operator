@@ -60,6 +60,16 @@ impl KubernetesPulumiStackService {
     let mut main_container: Container = serde_json::from_value(json!({
         "name": "pulumi",
         "image": "ghcr.io/stromee/pulumi-operator/pulumi-operator-kubernetes-job:1.0.31",
+        "resources": {
+            "requests": {
+                "cpu": "100m",
+                "memory": "500Mi",
+            },
+            "limits": {
+                "cpu": "300m",
+                "memory": "750Mi"
+            },
+        },
         "env": [{
             "name": "PULUMI_STACK",
             "value": name
